@@ -13,7 +13,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -60,6 +59,7 @@ func handleNewChannel(cr ssh.NewChannel, sc ssh.Conn, info string) {
 			)
 			reason = ssh.ConnectionFailed
 			message = "Fail"
+			message = err.Error()
 		} else {
 			log.Printf(
 				"%v Type:%q Data:%q Reason:%q Message:%q "+
@@ -120,11 +120,23 @@ func handleNewChannel(cr ssh.NewChannel, sc ssh.Conn, info string) {
 	)
 
 	/* For now, print out read data */
-	go io.Copy(io.MultiWriter(os.Stdout, och), rch)
-	go io.Copy(io.MultiWriter(os.Stdout, rch), och)
-	go io.Copy(io.MultiWriter(os.Stdout, och.Stderr()), rch.Stderr())
-	go io.Copy(io.MultiWriter(os.Stdout, rch.Stderr()), och.Stderr())
+	done := make(chan struct{}, 4)
+	go copyOut(och, rch, done)
+	go copyOut(rch, och, done)
+	go copyOut(och.Stderr(), rch.Stderr(), done)
+	go copyOut(rch.Stderr(), och.Stderr(), done)
 
-	/* TODO: Wait for it to close */
-	time.Sleep(time.Minute) /* Well, this is horrible */
+	/* Wait for a pipe to break */
+	<-done
+	fmt.Printf("\nDone.\n")
+}
+
+/* copyOut Copies src to dst and to stdout, and nonblockingly sends on done
+when there's no more left to copy */
+func copyOut(dst io.Writer, src io.Reader, done chan<- struct{}) {
+	io.Copy(io.MultiWriter(os.Stdout, dst), src)
+	select {
+	case done <- struct{}{}:
+	default:
+	}
 }
