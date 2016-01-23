@@ -10,14 +10,17 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
 
-/* Requests we won't make */
-var blockedReqs = map[string]bool{
+/* Sleep a bit before these requests to "avoid" race conditions.  Lousy, but
+it should work.  Pull request, anybody? */
+var delayedReqs = map[string]time.Duration{
 	/* Workaround for requests getting there faster than channels */
-	"no-more-sessions@openssh.com": true,
+	"no-more-sessions@openssh.com": 10 * time.Second,
+	"shell": 3 * time.Second,
 }
 
 /* handleChannelRequests handles proxying requests read from reqs to the SSH
@@ -80,14 +83,17 @@ func handleRequest(
 	) (bool, []byte, error),
 	cl func() error,
 	info string) {
-	logRequest(r, info)
 	/* If this is the wrong sort of request, respond no */
-	if _, ok := blockedReqs[r.Type]; ok {
-		if r.WantReply {
-			r.Reply(false, nil)
-		}
-		return
+	if s, ok := delayedReqs[r.Type]; ok {
+		log.Printf(
+			"%v Type:%v Delay:%v",
+			info,
+			r.Type,
+			s,
+		)
+		time.Sleep(s)
 	}
+	logRequest(r, info)
 	/* Ask the other side */
 	ok, data, err := sr(r.Type, r.WantReply, r.Payload)
 	if nil != err {
