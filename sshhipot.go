@@ -136,9 +136,6 @@ MitM's SSH connections and logs all activity.  Options are:
 		log.Fatalf("Unable to listen on %v: %v", *addr, err)
 	}
 
-	log.Printf("VicAddr: %v", *vicAddr)
-	log.Printf("VicUser: %v", *vicUser)
-	log.Printf("VicPass: %v", *vicPass)
 	/* Handle clients */
 	for {
 		c, err := l.Accept()
