@@ -15,6 +15,7 @@ Config
 ------
 Most of the options should be useable as-is.  The ones I expect will need to
 be configured:
+
 Option | Use
 -------|----
 `-ck`  | SSH identity file (i.e. `id_rsa`) to use to authenticate to the server.
