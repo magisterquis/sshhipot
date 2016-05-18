@@ -11,6 +11,12 @@ The general idea is that sshlowpot runs somewhere between the attacker and the
 real SSH server such that the attacker logs into the honeypot, and the honeypot
 logs into the server.
 
+Contact
+-------
+At this stage in its development, it's probably easier to find me on Freenode
+than anything, though reading the source is another option.  It's not _that_
+painful.  I can usually be found as `magisterquis` in `#devious`.
+
 Config
 ------
 Most of the options should be useable as-is.  The ones I expect will need to
