@@ -3,7 +3,9 @@ SSHHiPot
 High-interaction SSH honeypot (ok, it's really a logging ssh proxy).
 
 Still very much a work-in-progress.  Feel free to `go install` this repository
-if you'd like to try it.  Run it with `-h` to see more options.
+if you'd like to try it.  Run it with `-h` to see more options.  In particular,
+logging is kinda rough.  The main log goes to stderr, but so does everything
+else.  Grep?
 
 One of these days there'll be better documentation, really.
 
@@ -31,6 +33,10 @@ Option | Use
 
 Please note by default the server listens on port 2222.  You'll have to use
 pf or iptables or whatever other firewall to redirect the port.
+
+Contributions
+-------------
+Yes, please.
 
 Windows
 -------
