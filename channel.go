@@ -119,7 +119,7 @@ func handleChan(
 	go ProxyChannel(
 		ac,
 		cc,
-		lg,
+		clg,
 		"server->attacker",
 		wg,
 		1,
@@ -127,7 +127,7 @@ func handleChan(
 	go ProxyChannel(
 		cc,
 		ac,
-		lg,
+		clg,
 		"attacker->server",
 		wg,
 		1,
@@ -135,7 +135,7 @@ func handleChan(
 	go ProxyChannel(
 		cc.Stderr(),
 		ac.Stderr(),
-		lg,
+		clg,
 		"attacker-(err)->server",
 		wg,
 		0,
@@ -143,7 +143,7 @@ func handleChan(
 	go ProxyChannel(
 		ac.Stderr(),
 		cc.Stderr(),
-		lg,
+		clg,
 		"server-(err)->attacker",
 		wg,
 		0,
