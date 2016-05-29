@@ -45,6 +45,11 @@ func main() {
 		"",
 		"Password `file` with one password per line",
 	)
+	var passProb = flag.Float64(
+		"pp",
+		.05,
+		"Accept any password with this `probability`",
+	)
 	var kicHost = flag.String(
 		"H",
 		"localhost",
@@ -102,6 +107,7 @@ Options:
 		*serverVersion,
 		*password,
 		*passList,
+		*passProb,
 		*kicHost,
 		*keyName,
 	)

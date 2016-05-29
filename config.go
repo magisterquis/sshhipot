@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -30,6 +31,7 @@ func makeServerConfig(
 	noAuthNeeded bool,
 	serverVersion string,
 	password, passList string,
+	passProb float64,
 	hostname string,
 	keyname string,
 ) *ssh.ServerConfig {
@@ -63,10 +65,11 @@ func makeServerConfig(
 	c := &ssh.ServerConfig{
 		NoClientAuth:     noAuthNeeded,
 		ServerVersion:    serverVersion,
-		PasswordCallback: passwordCallback(passwords),
+		PasswordCallback: passwordCallback(passwords, passProb),
 		KeyboardInteractiveCallback: keyboardInteractiveCallback(
 			passwords,
 			hostname,
+			passProb,
 		),
 		PublicKeyCallback: publicKeyCallback(),
 	}
@@ -79,6 +82,7 @@ func makeServerConfig(
 passwords */
 func passwordCallback(
 	passwords map[string]struct{},
+	passProb float64,
 ) func(ssh.ConnMetadata, []byte) (*ssh.Permissions, error) {
 	/* Return a function to check for the password */
 	return func(
@@ -87,6 +91,9 @@ func passwordCallback(
 	) (*ssh.Permissions, error) {
 		p := string(password)
 		_, ok := passwords[p]
+		if !ok && diceRoll(passProb) {
+			ok = true
+		}
 		logAttempt(conn, "Password", p, ok)
 		if ok {
 			return nil, nil
@@ -133,6 +140,7 @@ accepts any of the allowed passwords. */
 func keyboardInteractiveCallback(
 	passwords map[string]struct{},
 	hostname string,
+	passProb float64,
 ) func(
 	ssh.ConnMetadata,
 	ssh.KeyboardInteractiveChallenge,
@@ -161,6 +169,9 @@ func keyboardInteractiveCallback(
 		} else {
 			p := string(as[0])
 			_, ok := passwords[p]
+			if !ok && diceRoll(passProb) {
+				ok = true
+			}
 			logAttempt(conn, "Keyboard", p, ok)
 			if ok {
 				return nil, nil
@@ -201,4 +212,9 @@ func logAttempt(conn ssh.ConnMetadata, method, cred string, suc bool) {
 		cred,
 		suc,
 	)
+}
+
+/* diceRoll will return true with a probability of prob */
+func diceRoll(prob float64) bool {
+	return rand.Float64() < prob
 }
