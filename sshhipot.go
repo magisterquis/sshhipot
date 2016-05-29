@@ -99,6 +99,7 @@ Options:
 
 	/* Log better */
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+	log.SetOutput(os.Stdout)
 	/* TODO: Log target server */
 
 	/* Make a server config */
