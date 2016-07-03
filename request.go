@@ -5,7 +5,7 @@ package main
  * Handle ssh requests
  * By J. Stuart McMurray
  * Created 20160517
- * Last Modified 20160518
+ * Last Modified 20160702
  */
 
 import (
@@ -56,14 +56,16 @@ func handleRequest(
 		r.Payload,
 		direction,
 	)
-	/* Ignore no-more-sessions methods, because we're bad people */
+	/* Ignore certain requests, because we're bad people */
 	if IGNORENMS {
-		if 1 == subtle.ConstantTimeCompare(
-			[]byte(r.Type),
-			[]byte("no-more-sessions@openssh.com"),
-		) {
-			lg.Printf("Ignoring Request %s", rl)
-			return
+		for _, ir := range IGNOREREQUESTS {
+			if 1 == subtle.ConstantTimeCompare(
+				[]byte(r.Type),
+				[]byte(ir),
+			) {
+				lg.Printf("Ignoring Request %s", rl)
+				return
+			}
 		}
 	}
 	/* Proxy to server */

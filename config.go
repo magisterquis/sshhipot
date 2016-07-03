@@ -5,7 +5,7 @@ package main
  * Make a server config
  * By J. Stuart McMurray
  * Created 20160514
- * Last Modified 20160517
+ * Last Modified 20160702
  */
 
 import (
@@ -21,11 +21,21 @@ import (
 
 /* Baked in config.  Ugly :( */
 const (
-	// IGNORENMS causes no-more-sessions messages to not be relayed.  This
-	// is a dirty hack to avoid a race condition in which the
-	// no-more-sessions message gets there before the session request.  :(
+	// IGNORENMS causes the below messages not to be relayed.
 	IGNORENMS = true
 )
+
+/* IgnoreRequests are request types to ignore */
+var IGNOREREQUESTS = []string{
+	/* Don't bother sending our host keys, mostly to keep the logs from
+	being cluttered.  Remove this if you really expect someone's looking
+	hard for honeypots. */
+	"hostkeys-00@openssh.com",
+
+	/* A dirty hack to avoid a race condition in which the no-more-sessions
+	message gets there before the session request.  :( */
+	"no-more-sessions@openssh.com",
+}
 
 func makeServerConfig(
 	noAuthNeeded bool,
