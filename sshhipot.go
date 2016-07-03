@@ -5,7 +5,7 @@ package main
  * Hi-interaction ssh honeypot
  * By J. Stuart McMurray
  * Created 20160514
- * Last Modified 20160514
+ * Last Modified 20160605
  */
 
 import (
@@ -65,6 +65,11 @@ func main() {
 		"d",
 		"conns",
 		"Per-onnection log `directory`",
+	)
+	var hideBanners = flag.Bool(
+		"B",
+		false,
+		"Don't log connections with no authentication attempts (banners).",
 	)
 	/* Client */
 	var cUser = flag.String(
@@ -129,7 +134,7 @@ Options:
 		if nil != err {
 			log.Fatalf("Unable to accept client: %v", err)
 		}
-		go handle(c, sc, *saddr, cc, *logDir)
+		go handle(c, sc, *saddr, cc, *logDir, *hideBanners)
 	}
 }
 

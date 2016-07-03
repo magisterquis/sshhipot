@@ -5,7 +5,7 @@ package main
  * Handle an SSH connection
  * By J. Stuart McMurray
  * Created 20160514
- * Last Modified 20160517
+ * Last Modified 20160605
  */
 
 import (
@@ -31,6 +31,7 @@ func handle(
 	saddr string,
 	cconfig *ssh.ClientConfig,
 	logDir string,
+	hideBanners bool,
 ) {
 	defer c.Close()
 	log.Printf("Address:%v New Connection", c.RemoteAddr())
@@ -38,6 +39,10 @@ func handle(
 	/* Try to turn it into an SSH connection */
 	sc, achans, areqs, err := ssh.NewServerConn(c, sconfig)
 	if nil != err {
+		/* Done unless we're supposed to report banner-grabbing */
+		if hideBanners {
+			return
+		}
 		/* EOF means the client gave up */
 		if io.EOF == err {
 			log.Printf(
