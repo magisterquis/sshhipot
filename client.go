@@ -64,5 +64,6 @@ func makeClientConfig(user, key string) *ssh.ClientConfig {
 			ssh.PublicKeys(k),
 		},
 		Timeout: TIMEOUT,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 }
