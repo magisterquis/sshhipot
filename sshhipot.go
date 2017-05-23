@@ -64,7 +64,7 @@ func main() {
 	var logDir = flag.String(
 		"d",
 		"conns",
-		"Per-onnection log `directory`",
+		"Per-connection log `directory`",
 	)
 	var hideBanners = flag.Bool(
 		"B",
