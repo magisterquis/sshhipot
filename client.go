@@ -65,6 +65,7 @@ func makeClientConfig(user, key, fingerprint string) *ssh.ClientConfig {
 			ssh.PublicKeys(k),
 		},
 		Timeout: TIMEOUT,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 	/* Check key against provided fingerprint */
 	cc.HostKeyCallback = func(
