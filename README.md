@@ -37,6 +37,7 @@ Option | Use
 `-cs`  | Server's address.  Can be loopback, even.
 `-cu`  | Ok, maybe `root` wasn't a great default.  `test` is probably better.
 `-p`   | Try `123456` or something more common than [`hunter2`](http://bash.org/?244321).  Also see the `-pf` flag.
+`-sf`  | Fingerprint of real server's Host Key (retreivable with `ssh-keyscan hostname 2>/dev/null | ssh-keygen -lf -`)
 
 Please note by default the server listens on port 2222.  You'll have to use
 pf or iptables or whatever other firewall to redirect the port.  It's probably

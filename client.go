@@ -10,6 +10,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -42,7 +43,7 @@ func clientDial(
 
 /* clientConfig makes an SSH client config which uses the given username and
 key */
-func makeClientConfig(user, key string) *ssh.ClientConfig {
+func makeClientConfig(user, key, fingerprint string) *ssh.ClientConfig {
 	/* Get SSH key */
 	k, g, err := getKey(key)
 	if nil != err {
@@ -58,11 +59,28 @@ func makeClientConfig(user, key string) *ssh.ClientConfig {
 		log.Printf("Loaded client key from %v", key)
 	}
 	/* Config to return */
-	return &ssh.ClientConfig{
+	cc := &ssh.ClientConfig{
 		User: user,
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(k),
 		},
 		Timeout: TIMEOUT,
 	}
+	/* Check key against provided fingerprint */
+	cc.HostKeyCallback = func(
+		hostname string,
+		remote net.Addr,
+		key ssh.PublicKey,
+	) error {
+		if fingerprint != ssh.FingerprintSHA256(key) &&
+			fingerprint != ssh.FingerprintLegacyMD5(key) {
+			return fmt.Errorf(
+				"Server host key fingerprint %v incorrect",
+				ssh.FingerprintSHA256(key),
+			)
+		}
+		return nil
+	}
+
+	return cc
 }

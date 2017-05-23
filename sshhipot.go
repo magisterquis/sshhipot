@@ -88,6 +88,11 @@ func main() {
 		"192.168.0.2:22",
 		"Real server `address`",
 	)
+	var fingerprint = flag.String(
+		"sf",
+		"",
+		"Real server host key `fingerprint`",
+	)
 	/* Local server config */
 	flag.Usage = func() {
 		fmt.Fprintf(
@@ -119,7 +124,7 @@ Options:
 	)
 
 	/* Make a client config */
-	cc := makeClientConfig(*cUser, *cKey)
+	cc := makeClientConfig(*cUser, *cKey, *fingerprint)
 
 	/* Listen for clients */
 	l, err := net.Listen("tcp", addSSHPort(*laddr))
