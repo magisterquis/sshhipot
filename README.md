@@ -1,3 +1,6 @@
+Version 2 is under development.  Please switch to the `v2` branch, build, and run with `-h`.
+============================================================================================
+
 SSHHiPot
 =========
 High-interaction SSH honeypot (ok, it's really a logging ssh proxy).
