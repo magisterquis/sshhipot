@@ -2,22 +2,22 @@ package main
 
 /*
  * request.go
- * Handle ssh requests
+ * Handles global and channel requests
  * By J. Stuart McMurray
- * Created 20160517
- * Last Modified 20160702
+ * Created 20180410
+ * Last Modified 20180512
  */
 
 import (
-	"crypto/subtle"
 	"fmt"
 	"log"
 
 	"golang.org/x/crypto/ssh"
 )
 
-/* Requestable is anything with a SendRequest */
-type Requestable interface {
+// RequestReceiver is any type which can receive an SSH request.  It is
+// satisfied by at least ssh.Conn and ssh.Channel.
+type requestReceiver interface {
 	SendRequest(
 		name string,
 		wantReply bool,
@@ -25,61 +25,67 @@ type Requestable interface {
 	) (bool, []byte, error)
 }
 
-/* handleReqs logs each received request and proxies it to the server. */
-/* handleReqs handles the requests which come in on reqs and proxies them to
-rable.  All of this is logged to lg, prefixed with desc, which should
-indicate the direction (e.g. attacker->server) of the request. */
-func handleReqs(
-	reqs <-chan *ssh.Request,
-	rable Requestable,
-	lg *log.Logger,
-	direction string,
-) {
-	/* Read requests until there's no more */
-	for r := range reqs {
-		handleRequest(r, rable, lg, direction)
-	}
+// ChannelRequestReceiver wraps an ssh.Channel and turns it into a
+// RequestReceiver.
+type ChannelRequestReceiver struct {
+	ch ssh.Channel
 }
 
-/* handleRequest handles a single request, which is proxied to rable and logged
-via lg. */
-func handleRequest(
+// SendRequest wraps crr.ch's SendRequest and always returns a nil byte
+// slice.
+func (crr ChannelRequestReceiver) SendRequest(
+	name string,
+	wantReply bool,
+	payload []byte,
+) (bool, []byte, error) {
+	ok, err := crr.ch.SendRequest(name, wantReply, payload)
+	return ok, nil, err
+}
+
+// ProxyRequest proxies r to rr.
+func ProxyRequest(
+	rr requestReceiver,
 	r *ssh.Request,
-	rable Requestable,
-	lg *log.Logger,
-	direction string,
-) {
-	rl := fmt.Sprintf(
-		"Type:%q WantReply:%v Payload:%q Direction:%q",
-		r.Type,
-		r.WantReply,
-		r.Payload,
-		direction,
-	)
-	/* Ignore certain requests, because we're bad people */
-	if IGNORENMS {
-		for _, ir := range IGNOREREQUESTS {
-			if 1 == subtle.ConstantTimeCompare(
-				[]byte(r.Type),
-				[]byte(ir),
-			) {
-				lg.Printf("Ignoring Request %s", rl)
-				return
-			}
-		}
-	}
-	/* Proxy to server */
-	ok, data, err := rable.SendRequest(r.Type, r.WantReply, r.Payload)
+) error {
+	/* Proxy request upstream */
+	ok, b, err := rr.SendRequest(r.Type, r.WantReply, r.Payload)
 	if nil != err {
-		lg.Printf("Unable to proxy request %s Error:%v", rl, err)
+		return err
+	}
+	/* Done if there's no need for a reply */
+	if !r.WantReply {
+		return nil
+	}
+
+	/* Send it back if there's a reply */
+	if err := r.Reply(ok, b); nil != err {
+		return err
+	}
+	return nil
+}
+
+// LogRequest logs the request.  If global is true, it is logged as a global
+// request.  The request will not be logged if its type is in m.
+func LogRequest(
+	tag string,
+	req *ssh.Request,
+	global bool,
+	m map[string]struct{},
+) {
+	/* Don't log it if it's in m */
+	if _, ok := m[req.Type]; ok {
 		return
 	}
 
-	/* TODO: Pass to server */
-	if err := r.Reply(ok, data); nil != err {
-		lg.Printf("Unable to respond to request %s Error:%v", rl, err)
-		return
+	msg := fmt.Sprintf("[%v] ", tag)
+	if global {
+		msg += "Global request "
+	} else {
+		msg += "Request "
 	}
-
-	lg.Printf("Request %s Ok:%v Response:%q", rl, ok, data)
+	msg += fmt.Sprintf("%s WantReply:%v", req.Type, req.WantReply)
+	if 0 != len(req.Payload) {
+		msg += fmt.Sprintf(" %q", string(req.Payload))
+	}
+	log.Printf("%s", msg)
 }
